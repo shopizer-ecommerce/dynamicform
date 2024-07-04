@@ -1,4 +1,4 @@
-import { Routes, Route, Outlet, Link } from "react-router-dom";
+import { Routes, Route, Outlet, useSearchParams, Link } from "react-router-dom";
 import React, { useState, useEffect } from 'react';
 import axios from "axios";
 import { Dialog } from '@headlessui/react';
@@ -82,6 +82,15 @@ function About() {
 
 function Form() {
 
+  const [searchParams] = useSearchParams();
+  let product = searchParams.get('product');
+  console.log('product is' + product);
+  let productSku = '';
+  if(product) {
+    productSku = ' - ' + product;
+  }
+
+
   //dynamic form
   const endpoint = `https://ca-central-1.cdn.hygraph.com/content/clu02mxdl017i07wb3byzu3w9/master`;
 
@@ -115,23 +124,29 @@ function Form() {
     fromEmail : "",
     email_address : "",
     email_details : "",
-    app : "SHOPIZER"
+    app : "PERFECTOGAZ"
   })
 
   const client = axios.create({
-    baseURL: "https://eilgrzlvu9.execute-api.ca-central-1.amazonaws.com/prod" 
+    //baseURL: "https://eilgrzlvu9.execute-api.ca-central-1.amazonaws.com/prod"
+    baseURL: "https://fwy7giz3og.execute-api.ca-central-1.amazonaws.com/prod" 
   });
 
 
   useEffect(() => {
+    setSuccess(false);
     const fetchContent = async () => {
       const c  = await request(endpoint, CONTENT_QUERY2)
       setContent(c);
+      productSku = '';
       setTitle("Demande " + c.quotationForm?.titreCampagne);
-      console.log('content ' + JSON.stringify(content));
+      //console.log('content ' + JSON.stringify(content));
     };
-
-    fetchContent();
+    setContent("");
+    setTitle("Demande d'informations" + productSku);
+    if(product === null) {
+      fetchContent();
+    }
   }, []);
 
   const handleFormSubmit = async (e) => {
@@ -160,7 +175,7 @@ function Form() {
     if(errorMissing.length === 0) {
       setSending(true);
       client
-      .post('https://eilgrzlvu9.execute-api.ca-central-1.amazonaws.com/prod', {
+      .post('https://fwy7giz3og.execute-api.ca-central-1.amazonaws.com/prod', {
          email: form
       })
       .then((response) => {
@@ -170,13 +185,6 @@ function Form() {
       });
     }
 
-    //send email
-    //
-    //if(errorMissing.length > 0) {
-    //  setError({ title: "Erreur de validation", errors: errorMissing});
-    //} else {
-    //  setSuccess({ title: "Envoi de message", text: "Votre message a été envoyé avec succès" });
-    //}
   }
 
   return (
@@ -201,7 +209,7 @@ function Form() {
     <div className="mx-auto mt-8 max-w-7xl px-6 sm:mt-16 lg:px-8">
 
     {errors.length>0 && <Error title="Erreur de validation" errors={errors} />}
-    {success != null && <Success title="Envoi de message réussi" text="Votre message a été envoyé avec succès" />}
+    {success && <Success title="Envoi de message réussi" text="Votre message a été envoyé avec succès" />}
 
 
      {/** FORM */}
@@ -215,7 +223,7 @@ function Form() {
           <span className="text-3xl mr-4">Envoi de la demande</span>
           <svg className="animate-spin h-8 w-8 text-gray-800" xmlns="http://www.w3.org/2000/svg" fill="none"
             viewBox="0 0 24 24">
-            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
             <path className="opacity-75" fill="currentColor"
               d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
             </path>
@@ -232,7 +240,7 @@ function Form() {
         {
           !content ? (
             
-              'Chargement de la section'
+              ''
                     ) : (
                       <React.Fragment>
 
@@ -256,7 +264,8 @@ function Form() {
                 
                     )
         }
-          <h2 className="mt-16 text-base font-semibold leading-7 text-gray-900">Demande de soumission</h2>
+          <h2 className="mt-16 text-base font-semibold leading-7 text-gray-900">Demande d'informations{productSku}</h2>
+
 
           <div className="mt-10 grid grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6">
             <div className="col-span-full">
@@ -316,7 +325,7 @@ function Form() {
 
             <div className="col-span-full">
               <label htmlFor="street-address" className="block text-sm font-medium leading-6 text-gray-900">
-                Adresse du projet
+                Votre adresse
               </label>
               <div className="mt-2">
                 <input
@@ -343,7 +352,7 @@ function Form() {
 
             <div className="col-span-full">
               <label htmlFor="about" className="block text-sm font-medium leading-6 text-gray-900">
-                Détails du projet
+                Détails de la demande
               </label>
               <div className="mt-2">
                 <textarea
